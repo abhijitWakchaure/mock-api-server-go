@@ -1,0 +1,36 @@
+[
+  "{{repeat(100, 100)}}",
+  {
+    "id": "{{objectId()}}",
+    "username": "{{email()}}",
+    "password": function (tags) {
+      var length = 15,
+        charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$*!",
+        retVal = "";
+      for (var i = 0, n = charset.length; i < length; ++i) {
+        retVal += charset.charAt(Math.floor(Math.random() * n));
+      }
+      return retVal;
+    },
+    "fullname": "{{firstName()}} {{surname()}}",
+    "mobile": "+91 {{phone(\"xxxxxxxxxx\")}}",
+    "createdAt": function (tags) {
+      var start = new Date(2018, 0, 1);
+      var end = new Date();
+      var d = new Date(
+        start.getTime() + Math.random() * (end.getTime() - start.getTime())
+      );
+      return d.getTime();
+    },
+    "modifiedAt": function (tags) {
+      var start = new Date(this.createdAt);
+      var end = new Date();
+      var d = new Date(
+        start.getTime() + Math.random() * (end.getTime() - start.getTime())
+      );
+      return d.getTime();
+    },
+    "blocked": "{{bool()}}",
+    "roles": ["ROLE_USER"]
+  }
+]
