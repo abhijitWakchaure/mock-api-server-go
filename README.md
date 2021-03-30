@@ -2,6 +2,23 @@
 
 Simple mock API server in go
 
+## Schema for user struct
+```
+{
+	"id": "60624180893d170927d32e27",
+	"username": "john@example.com",
+	"password": "EQWMJYq40spmT#g",
+	"fullname": "John Doe",
+	"mobile": "+91 9999999999",
+	"createdAt": 1538919475135,
+	"modifiedAt": 1599340945571,
+	"blocked": false,
+	"roles": [
+		"ROLE_USER"
+	]
+}
+```
+
 ## Flags
 | Flag  | Default Value(s) | Description             |
 | :---- |:-----------------|:------------------------|
