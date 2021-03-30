@@ -52,7 +52,7 @@ func main() {
 		fmt.Printf("\nReceived signal: %v\n", <-sigChan)
 		quit <- true
 	}()
-	mylogger.InfoLog("Mock API server started on port %d", *port)
+	mylogger.InfoLog("Mock API Server [v1.0.0] started on port %d", *port)
 	for {
 		select {
 		case <-quit:
@@ -109,7 +109,23 @@ Method: [   GET]	Path: [/users]
 Method: [  POST]	Path: [/users]       
 Method: [   GET]	Path: [/users/{id}]  
 Method: [   PUT]	Path: [/users/{id}]  
-Method: [DELETE]	Path: [/users/{id}]  
+Method: [DELETE]	Path: [/users/{id}]
+
+Schema for User:
+
+{
+	"id": "60624180893d170927d32e27",
+	"username": "john@example.com",
+	"password": "EQWMJYq40spmT#g",
+	"fullname": "John Doe",
+	"mobile": "+91 9999999999",
+	"createdAt": 1538919475135,
+	"modifiedAt": 1599340945571,
+	"blocked": false,
+	"roles": [
+		"ROLE_USER"
+	]
+}
 `
 	fmt.Println(helpText)
 }
