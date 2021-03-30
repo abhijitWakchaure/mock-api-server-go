@@ -48,7 +48,7 @@ func main() {
 
 	allowedOrigins := handlers.AllowedOrigins([]string{"*"})
 	allowedMethods := handlers.AllowedMethods([]string{"GET", "POST", "OPTIONS", "DELETE", "PUT"})
-	allowedHeaders := handlers.AllowedHeaders([]string{"Accept", "Content-Type", "Content-Length", "Accept-Encoding", "X-CSRF-Token", "Authorization"})
+	allowedHeaders := handlers.AllowedHeaders([]string{"Accept", "Accept-Encoding", "Access-Control-Allow-Headers", "Access-Control-Allow-Origin", "Access-Control-Request-Headers", "Access-Control-Request-Method", "Allow", "Authorization", "Connection", "Content-Length", "Content-Type", "Forwarded", "Keep-Alive", "Origin", "Proxy-Authenticate", "Proxy-Authorization", "Referer", "User-Agent", "X-CSRF-Token", "X-Forwarded-For", "X-Requested-With"})
 
 	go func() {
 
