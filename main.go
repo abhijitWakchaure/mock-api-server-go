@@ -25,7 +25,7 @@ var c = &user.Controller{
 }
 
 // VERSION ...
-const VERSION = "v1.0.2"
+const VERSION = "v1.0.3"
 
 func main() {
 	quit := make(chan bool)
@@ -48,13 +48,13 @@ func main() {
 
 	allowedOrigins := handlers.AllowedOrigins([]string{"*"})
 	allowedMethods := handlers.AllowedMethods([]string{"GET", "POST", "OPTIONS", "DELETE", "PUT"})
-	allowedHeaders := handlers.AllowedHeaders([]string{"Accept", "Accept-Encoding", "Access-Control-Allow-Headers", "Access-Control-Allow-Origin", "Access-Control-Request-Headers", "Access-Control-Request-Method", "Allow", "Authorization", "Connection", "Content-Length", "Content-Type", "Forwarded", "Keep-Alive", "Origin", "Proxy-Authenticate", "Proxy-Authorization", "Referer", "User-Agent", "X-CSRF-Token", "X-Forwarded-For", "X-Requested-With"})
+	// allowedHeaders := handlers.AllowedHeaders([]string{"Accept", "Accept-Encoding", "Access-Control-Allow-Headers", "Access-Control-Allow-Origin", "Access-Control-Request-Headers", "Access-Control-Request-Method", "Allow", "Authorization", "Connection", "Content-Length", "Content-Type", "Forwarded", "Keep-Alive", "Origin", "Proxy-Authenticate", "Proxy-Authorization", "Referer", "User-Agent", "X-CSRF-Token", "X-Forwarded-For", "X-Requested-With", "X-Total-Count"})
 
 	go func() {
 
 		if err := http.ListenAndServe(fmt.Sprintf(":%d", *port),
 			handlers.CombinedLoggingHandler(os.Stdout,
-				handlers.CORS(allowedOrigins, allowedMethods, allowedHeaders)(userRouter))); err != nil {
+				handlers.CORS(allowedOrigins, allowedMethods)(userRouter))); err != nil {
 			mylogger.ErrorLog("Unexpected server error occurred: ", err.Error())
 			quit <- true
 		}

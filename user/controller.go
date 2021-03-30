@@ -2,7 +2,9 @@ package user
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"reflect"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -113,6 +115,15 @@ func (c *Controller) ListUsers(w http.ResponseWriter, r *http.Request) {
 func EncodeResponse(w http.ResponseWriter, code int, res interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
+	if isSlice(res) {
+		resarr := res.([]User)
+		w.Header().Set("Access-Control-Expose-Headers", "X-Total-Count")
+		w.Header().Set("X-Total-Count", fmt.Sprintf("%d", len(resarr)))
+	}
 	w.WriteHeader(code)
 	json.NewEncoder(w).Encode(res)
+}
+
+func isSlice(res interface{}) bool {
+	return reflect.TypeOf(res).Kind() == reflect.Slice || reflect.TypeOf(res).Kind() == reflect.Array
 }
