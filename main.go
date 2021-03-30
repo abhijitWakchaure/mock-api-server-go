@@ -52,7 +52,7 @@ func main() {
 		fmt.Printf("\nReceived signal: %v\n", <-sigChan)
 		quit <- true
 	}()
-	mylogger.InfoLog("Mock API Server [v1.0.0] started on port %d", *port)
+	mylogger.InfoLog("Mock API Server [v1.0.1] started on port %d", *port)
 	for {
 		select {
 		case <-quit:
@@ -135,9 +135,10 @@ func loggingHandler(handler http.HandlerFunc) http.HandlerFunc {
 		start := time.Now()
 		handler.ServeHTTP(w, r)
 		mylogger.InfoLog(
-			"[%s] [%s] %s",
+			"[%s] [%s] %s \t %s",
 			fmt.Sprintf("%6s", r.Method),
 			r.RequestURI,
+			r.RemoteAddr,
 			time.Since(start))
 	})
 }

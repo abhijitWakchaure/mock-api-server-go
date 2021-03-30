@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
+echo "### Deleting old dist files..."
+rm -rf dist/*
 packr2
 appName="mock-api-server-go"
-appVersion="v1.0.0"
+appVersion="v1.0.1"
 export CGO_ENABLED=0
 echo "### Building for platform: linux/amd64"
 env GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o dist/${appName}-${appVersion}-linux-amd64
