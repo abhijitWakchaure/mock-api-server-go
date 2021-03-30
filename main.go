@@ -15,6 +15,7 @@ import (
 	"github.com/abhijitWakchaure/mock-api-server-go/db"
 	"github.com/abhijitWakchaure/mock-api-server-go/mylogger"
 	"github.com/abhijitWakchaure/mock-api-server-go/user"
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
@@ -23,10 +24,13 @@ var c = &user.Controller{
 	Users: db.MockUserData,
 }
 
+// VERSION ...
+const VERSION = "v1.0.2"
+
 func main() {
 	quit := make(chan bool)
 	sigChan := make(chan os.Signal)
-	signal.Notify(sigChan, syscall.SIGKILL, syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)
+	signal.Notify(sigChan, syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)
 	port = flag.Int("p", 8080, "Change the default port for the server")
 	help := flag.Bool("h", false, "Print the help section")
 	flag.Parse()
@@ -36,13 +40,21 @@ func main() {
 	}
 	checkPortUsed(*port)
 	userRouter := mux.NewRouter()
-	userRouter.HandleFunc("/users", loggingHandler(c.ListUsers)).Methods("GET")
-	userRouter.HandleFunc("/users", loggingHandler(c.CreateUser)).Methods("POST")
-	userRouter.HandleFunc("/users/{id}", loggingHandler(c.ReadUser)).Methods("GET")
-	userRouter.HandleFunc("/users/{id}", loggingHandler(c.UpdateUser)).Methods("PUT")
-	userRouter.HandleFunc("/users/{id}", loggingHandler(c.DeleteUser)).Methods("DELETE")
+	userRouter.HandleFunc("/users", c.ListUsers).Methods("GET")
+	userRouter.HandleFunc("/users", c.CreateUser).Methods("POST")
+	userRouter.HandleFunc("/users/{id}", c.ReadUser).Methods("GET")
+	userRouter.HandleFunc("/users/{id}", c.UpdateUser).Methods("PUT")
+	userRouter.HandleFunc("/users/{id}", c.DeleteUser).Methods("DELETE")
+
+	allowedOrigins := handlers.AllowedOrigins([]string{"*"})
+	allowedMethods := handlers.AllowedMethods([]string{"GET", "POST", "OPTIONS", "DELETE", "PUT"})
+	allowedHeaders := handlers.AllowedHeaders([]string{"Accept", "Content-Type", "Content-Length", "Accept-Encoding", "X-CSRF-Token", "Authorization"})
+
 	go func() {
-		if err := http.ListenAndServe(fmt.Sprintf(":%d", *port), userRouter); err != nil {
+
+		if err := http.ListenAndServe(fmt.Sprintf(":%d", *port),
+			handlers.CombinedLoggingHandler(os.Stdout,
+				handlers.CORS(allowedOrigins, allowedMethods, allowedHeaders)(userRouter))); err != nil {
 			mylogger.ErrorLog("Unexpected server error occurred: ", err.Error())
 			quit <- true
 		}
@@ -52,7 +64,7 @@ func main() {
 		fmt.Printf("\nReceived signal: %v\n", <-sigChan)
 		quit <- true
 	}()
-	mylogger.InfoLog("Mock API Server [v1.0.1] started on port %d", *port)
+	mylogger.InfoLog("Mock API Server %s started on port %d", VERSION, *port)
 	for {
 		select {
 		case <-quit:
@@ -130,7 +142,20 @@ Schema for User:
 	fmt.Println(helpText)
 }
 
-func loggingHandler(handler http.HandlerFunc) http.HandlerFunc {
+func loggingHandlerFunc(handlerFunc http.HandlerFunc) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		handlerFunc.ServeHTTP(w, r)
+		mylogger.InfoLog(
+			"[%s] [%s] %s \t %s",
+			fmt.Sprintf("%6s", r.Method),
+			r.RequestURI,
+			r.RemoteAddr,
+			time.Since(start))
+	})
+}
+
+func loggingHandler(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 		handler.ServeHTTP(w, r)
