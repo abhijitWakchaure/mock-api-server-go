@@ -22,7 +22,7 @@ import (
 var port *int
 
 // VERSION ...
-const VERSION = "v1.0.4"
+var VERSION string
 
 func main() {
 	flag.Usage = printHelpText

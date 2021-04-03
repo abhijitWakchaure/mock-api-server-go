@@ -1,3 +1,7 @@
+[![GitHub license](https://img.shields.io/github/license/abhijitWakchaure/mock-api-server-go?style=for-the-badge)](https://github.com/abhijitWakchaure/mock-api-server-go/blob/master/LICENSE) 
+![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/abhijitwakchaure/mock-api-server-go?style=for-the-badge)
+![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/abhijitWakchaure/mock-api-server-go?style=for-the-badge)
+
 # mock-api-server-go
 
 Simple mock API server in go
