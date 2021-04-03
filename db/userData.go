@@ -13,7 +13,8 @@ import (
 // MockUserData ...
 var MockUserData []user.User
 
-func init() {
+// InitDB ...
+func InitDB() {
 	mylogger.InfoLog("Initializing database...")
 	box := packr.New("myBox", ".")
 	userBytes, err := box.Find("userData.json")

@@ -113,8 +113,6 @@ func (c *Controller) ListUsers(w http.ResponseWriter, r *http.Request) {
 
 // EncodeResponse ...
 func EncodeResponse(w http.ResponseWriter, code int, res interface{}) {
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 	if isSlice(res) {
 		resarr := res.([]User)
 		w.Header().Set("Access-Control-Expose-Headers", "X-Total-Count")

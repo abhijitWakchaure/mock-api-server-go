@@ -19,20 +19,22 @@ Simple mock API server in go
 }
 ```
 
-## Exposed APIs
-| Method |   Path      |
-|:-------|:-----------:|
-| GET    | /users      |
-| POST   | /users      |
-| GET    | /users/{id} |
-| PUT    | /users/{id} |
-| DELETE | /users/{id} |
+## Exposed APIs (Default)
+| Method |   Path          |
+|:-------|:----------------|
+| GET    | /api/users      |
+| POST   | /api/users      |
+| GET    | /api/users/{id} |
+| PUT    | /api/users/{id} |
+| DELETE | /api/users/{id} |
 
 ## Flags
-| Flag  | Default Value(s) | Description             |
-| :---- |:-----------------|:------------------------|
-| -p    | 8080             | Port for the API server |
-| -h    | NA               | Print the help message  |
+| Flag      | Default Value(s) | Description              |
+| :---------|:-----------------|:-------------------------|
+| -endpoint | /api/users/      | Endpoint for API server  |
+| -port     | 8080             | Port for the API server  |
+| -version  | NA               | Print the server version |
+| -help     | NA               | Print the help message   |
 
 
 ## Download the API server

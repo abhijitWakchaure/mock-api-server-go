@@ -25,46 +25,64 @@ var c = &user.Controller{
 }
 
 // VERSION ...
-const VERSION = "v1.0.3"
+const VERSION = "v1.0.4"
 
 func main() {
+	flag.Usage = printHelpText
 	quit := make(chan bool)
 	sigChan := make(chan os.Signal)
 	signal.Notify(sigChan, syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)
-	port = flag.Int("p", 8080, "Change the default port for the server")
-	help := flag.Bool("h", false, "Print the help section")
+	port = flag.Int("port", 8080, "Change the default port for the server")
+	endpointFlag := flag.String("endpoint", "/api/users", "Change the default endpoint for the server")
+	help := flag.Bool("help", false, "Print the help section")
+	version := flag.Bool("version", false, "Print the server version")
 	flag.Parse()
 	if *help {
 		printHelpText()
-		return
+		os.Exit(0)
+	}
+	if *version {
+		printVersion()
+		os.Exit(0)
+	}
+	endpoint := *endpointFlag
+	if endpoint[0] != '/' {
+		mylogger.ErrorLog("API endpoint must start with a slash ('/')")
+		os.Exit(1)
+	}
+	if endpoint[len(endpoint)-1] != '/' {
+		endpoint = endpoint + "/"
 	}
 	checkPortUsed(*port)
+	db.InitDB()
+	mylogger.InfoLog("Server port is set to %d", *port)
+	mylogger.InfoLog("Server endpoint is set to [%s]", endpoint)
 	userRouter := mux.NewRouter()
-	userRouter.HandleFunc("/users", c.ListUsers).Methods("GET")
-	userRouter.HandleFunc("/users", c.CreateUser).Methods("POST")
-	userRouter.HandleFunc("/users/{id}", c.ReadUser).Methods("GET")
-	userRouter.HandleFunc("/users/{id}", c.UpdateUser).Methods("PUT")
-	userRouter.HandleFunc("/users/{id}", c.DeleteUser).Methods("DELETE")
+	userRouter.HandleFunc(endpoint, c.ListUsers).Methods("GET")
+	userRouter.HandleFunc(endpoint, c.CreateUser).Methods("POST")
+	userRouter.HandleFunc(endpoint+"{id}", c.ReadUser).Methods("GET")
+	userRouter.HandleFunc(endpoint+"{id}", c.UpdateUser).Methods("PUT")
+	userRouter.HandleFunc(endpoint+"{id}", c.DeleteUser).Methods("DELETE")
 
 	allowedOrigins := handlers.AllowedOrigins([]string{"*"})
 	allowedMethods := handlers.AllowedMethods([]string{"GET", "POST", "OPTIONS", "DELETE", "PUT"})
-	// allowedHeaders := handlers.AllowedHeaders([]string{"Accept", "Accept-Encoding", "Access-Control-Allow-Headers", "Access-Control-Allow-Origin", "Access-Control-Request-Headers", "Access-Control-Request-Method", "Allow", "Authorization", "Connection", "Content-Length", "Content-Type", "Forwarded", "Keep-Alive", "Origin", "Proxy-Authenticate", "Proxy-Authorization", "Referer", "User-Agent", "X-CSRF-Token", "X-Forwarded-For", "X-Requested-With", "X-Total-Count"})
+	allowedHeaders := handlers.AllowedHeaders([]string{"Accept", "Accept-Encoding", "Access-Control-Allow-Headers", "Access-Control-Allow-Origin", "Access-Control-Request-Headers", "Access-Control-Request-Method", "Allow", "Authorization", "Connection", "Content-Length", "Content-Type", "Forwarded", "Keep-Alive", "Origin", "Proxy-Authenticate", "Proxy-Authorization", "Referer", "User-Agent", "X-CSRF-Token", "X-Forwarded-For", "X-Requested-With", "X-Total-Count"})
 
 	go func() {
-
-		if err := http.ListenAndServe(fmt.Sprintf(":%d", *port),
-			handlers.CombinedLoggingHandler(os.Stdout,
-				handlers.CORS(allowedOrigins, allowedMethods)(userRouter))); err != nil {
+		handler := handlers.CombinedLoggingHandler(os.Stdout, handlers.CORS(allowedHeaders, allowedMethods, allowedOrigins)(userRouter))
+		handler = myCORSHandler(handler)
+		if err := http.ListenAndServe(fmt.Sprintf(":%d", *port), handler); err != nil {
 			mylogger.ErrorLog("Unexpected server error occurred: ", err.Error())
 			quit <- true
 		}
 	}()
 	// OS Signal Handler
 	go func() {
-		fmt.Printf("\nReceived signal: %v\n", <-sigChan)
+		mylogger.InfoLog("\nReceived signal: %v\n", <-sigChan)
 		quit <- true
 	}()
-	mylogger.InfoLog("Mock API Server %s started on port %d", VERSION, *port)
+	t := time.Now().Format("02/Jan/2006 15:04:05 -0700")
+	mylogger.InfoLog("Mock API Server [%s] is started at %s", VERSION, t)
 	for {
 		select {
 		case <-quit:
@@ -84,7 +102,7 @@ func executeCommand(cmd *exec.Cmd) {
 		}
 		if exitError, ok := err.(*exec.ExitError); ok {
 			waitStatus = exitError.Sys().(syscall.WaitStatus)
-			mylogger.InfoLog("Error during killing process using port %d(exit code: %s)", *port, []byte(fmt.Sprintf("%d", waitStatus.ExitStatus())))
+			mylogger.ErrorLog("Error during killing process using port %d(exit code: %s)", *port, []byte(fmt.Sprintf("%d", waitStatus.ExitStatus())))
 		}
 	} else {
 		waitStatus = cmd.ProcessState.Sys().(syscall.WaitStatus)
@@ -109,34 +127,53 @@ func checkPortUsed(port int) {
 	}
 }
 
+func printVersion() {
+	fmt.Printf("Mock API Server:\n")
+	fmt.Printf("Github: %s\n", "https://github.com/abhijitWakchaure/mock-api-server-go")
+	fmt.Printf("Version: %s\n", VERSION)
+}
+
 func printHelpText() {
 	helpText := `
 ---------------------------------------------------------------------------
                              Mock API Server
 ---------------------------------------------------------------------------
 
+Usage:
+    	
+    -endpoint string
+        Change the default endpoint for the server (default "/api/users")
+    -port int
+        Change the default port for the server (default 8080)
+    -version
+        Print the server version
+    -help
+        Print the help section
+
+
 Exposed APIs:
 
-Method: [   GET]	Path: [/users]      
-Method: [  POST]	Path: [/users]       
-Method: [   GET]	Path: [/users/{id}]  
-Method: [   PUT]	Path: [/users/{id}]  
-Method: [DELETE]	Path: [/users/{id}]
+    Method: [   GET]	Path: [/users]
+    Method: [  POST]	Path: [/users]
+    Method: [   GET]	Path: [/users/{id}]  
+    Method: [   PUT]	Path: [/users/{id}]
+    Method: [DELETE]	Path: [/users/{id}]
+
 
 Schema for User:
 
 {
-	"id": "60624180893d170927d32e27",
-	"username": "john@example.com",
-	"password": "EQWMJYq40spmT#g",
-	"fullname": "John Doe",
-	"mobile": "+91 9999999999",
-	"createdAt": 1538919475135,
-	"modifiedAt": 1599340945571,
-	"blocked": false,
-	"roles": [
-		"ROLE_USER"
-	]
+    "id": "60624180893d170927d32e27",
+    "username": "john@example.com",
+    "password": "EQWMJYq40spmT#g",
+    "fullname": "John Doe",
+    "mobile": "+91 9999999999",
+    "createdAt": 1538919475135,
+    "modifiedAt": 1599340945571,
+    "blocked": false,
+    "roles": [
+        "ROLE_USER"
+    ]
 }
 `
 	fmt.Println(helpText)
@@ -165,5 +202,24 @@ func loggingHandler(handler http.Handler) http.Handler {
 			r.RequestURI,
 			r.RemoteAddr,
 			time.Since(start))
+	})
+}
+
+func myCORSHandler(handler http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// if r.Method == "OPTIONS" {
+		// 	fmt.Println("Got OPTIONS request")
+		// 	// w.WriteHeader(http.StatusOK)
+		// 	// return
+		// }
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Vary", "Origin")
+		w.Header().Set("Vary", "Accept-Encoding")
+		w.Header().Set("Vary", "Access-Control-Request-Method")
+		w.Header().Set("Vary", "Access-Control-Request-Headers")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Origin, Accept, token")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE")
+		handler.ServeHTTP(w, r)
 	})
 }
