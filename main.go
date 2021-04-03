@@ -20,9 +20,6 @@ import (
 )
 
 var port *int
-var c = &user.Controller{
-	Users: db.MockUserData,
-}
 
 // VERSION ...
 const VERSION = "v1.0.4"
@@ -55,10 +52,13 @@ func main() {
 	}
 	checkPortUsed(*port)
 	db.InitDB()
+	c := &user.Controller{
+		Users: db.MockUserData,
+	}
 	mylogger.InfoLog("Server port is set to %d", *port)
 	mylogger.InfoLog("Server endpoint is set to [%s]", endpoint)
-	userRouter := mux.NewRouter()
-	userRouter.HandleFunc(endpoint, c.ListUsers).Methods("GET")
+	userRouter := mux.NewRouter().StrictSlash(true)
+	userRouter.HandleFunc("/api/users", c.ListUsers).Methods("GET")
 	userRouter.HandleFunc(endpoint, c.CreateUser).Methods("POST")
 	userRouter.HandleFunc(endpoint+"{id}", c.ReadUser).Methods("GET")
 	userRouter.HandleFunc(endpoint+"{id}", c.UpdateUser).Methods("PUT")
